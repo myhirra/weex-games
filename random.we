@@ -1,0 +1,132 @@
+<style>
+    .wrapper{
+        justify-content: center;
+        align-items: center;
+    }
+
+    .header{
+        position: absolute;
+        top: 20;
+        left:20;
+    }
+
+    .header-inner{
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        height: 40;
+    }
+
+    .header-inner-text{
+        font-size: 30;
+        align-items: center;
+    }
+
+    .header-inner-left{
+        width: 100;
+    }
+
+    .header-inner-middle{
+        width: 120;
+    }
+
+    .header-inner-right{
+        width: 120;
+    }
+
+    .result{
+        font-size: 400;
+        color: #FF0000
+    }
+</style>
+
+<template>
+    <div class="wrapper" onclick="randomHanlder">
+        <div class="header">
+            <div class="header-inner">
+                <text class="header-inner-text header-inner-left">名次</text>
+                <text class="header-inner-text header-inner-middle">分值</text>
+                <text class="header-inner-text header-inner-right">次数</text>
+            </div>
+
+            <div class="header-inner" repeat="{{(i,v) in rankList}}">
+                <text class="header-inner-text header-inner-left">{{i + 1}}</text>
+                <text class="header-inner-text header-inner-middle">{{v.num}}</text>
+                <text class="header-inner-text header-inner-right">{{v.count}}</text>
+            </div>
+        </div>
+        <div class="main">
+            <text if={{!result}}>Random</text>
+            <text class="result" id="result">{{result}}</text>
+        </div>
+    </div>
+</template>
+
+<script>
+    module.exports = {
+        data: {
+            result: '',
+            rankList: [],
+            resultList: []
+        },
+        created: function(){
+            this.animation = require('@weex-module/animation');
+            this.timer = require('@weex-module/timer');
+            this.resultList = [];
+            for(i = 1 ;i <= 10; i++){
+                this.resultList.push({
+                    num: i,
+                    count: 0
+                });
+            }
+        },
+        methods: {
+
+            interval: function(callback, done , times){
+                var me = this;
+                times = times || 0;
+                times ++;
+                if(times === 50){
+                    done && done();
+                    return false;
+                }
+                this.timer.setTimeout(function(){
+                    callback && callback();
+                    me.interval(callback, done ,times);
+                },10);
+            },
+
+            randomHanlder: function(){
+                var me = this;
+
+                this.interval(function(){
+                    num = parseInt( ~~ (Math.random() * 10 ) + 1 );
+                    me.result = num;
+                },function(){
+                    var result = me.result;
+                    me.resultList[result - 1].count ++;
+                    me.rankList = me.rank(me.resultList);
+
+                    var $result = me.$el('result');
+                    me.animation.transition($result, {
+                        styles: {
+                          transform: 'scale('+ parseFloat(result / 10).toFixed(2) +')'
+                        },
+                        duration: 500,
+                        timingFunction: 'ease',
+                        transformOrigin: 'center center',
+                        delay: 0
+                      }, function() {
+                        nativeLog('animation finished.');
+                      });
+                });
+            },
+
+            rank: function(list){
+                return list.sort(function(prev,next){
+                    return (next.count - prev.count)
+                }).slice(0,3);
+            }
+        }
+    }
+</script>
