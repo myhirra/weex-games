@@ -1,17 +1,72 @@
 <style>
+    .main{
+        margin-top: 200;
+        padding-left: 100;
+        padding-right: 100;
+    }
+
+    .header{
+        position: absolute;
+        top: 50;
+        left: 0;
+        width: 750;
+        align-items: center;
+    }
+
+    .row-wrapper{
+        flex-direction: row;
+        height: 200;
+    }
+
+    .row-inner{
+        width: 180;
+        height: 200;
+    }
+
+    .block-common{
+        width: 180;
+        height: 200;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .active{
+        background-color: #ff6699;
+        color: #ffffff;
+    }
+
+    .noactive{
+        background-color: #ffffff;
+        color: #000000;
+    }
+
+    .start{
+        font-size: 40;
+    }
+
+    .start-active{
+        color : #ff6699;
+    }
+
+    .start-no-active{
+        color : #999999;
+    }
 
 </style>
 
 <template>
     <div class="wrapper">
-        <div class="" repeat="{{(i,out) in list}}">
-            <div class="row-wrapper">
+        <div class="header">
+            <text>今天去哪儿吃?</text>
+        </div>
+        <div class="main">
+            <div class="row-wrapper" repeat="{{(i,out) in list}}">
                 <div class="row-inner" repeat="{{(j,inner) in out.list}}">
-                    <div if="{{i===1 && j === 1}}" class="block-middle">
-                        <text>Start</text>
+                    <div if="{{i===1 && j === 1}}" class="block-common block-middle" onclick="start">
+                        <text class="start {{isStart? 'start-active': 'start-no-active'}}" id="start">Start</text>
                     </div>
-                    <div if="{{i!==1 || j !== 1}}" class="block-common">
-                        <text>{{inner}}</text>
+                    <div if="{{i!==1 || j !== 1}}" class="block-common {{inner.active?'active':'noactive'}}">
+                        <text>{{inner.name}}</text>
                     </div>
                 </div>
             </div>
@@ -25,34 +80,112 @@
             list: [{
                 list: []
             }],
+            isStart: true ,
             shopList: ['1号楼','2号楼','5号楼','8号楼','同乐会','古水人家','理工大学','别吃了']
         },
         created: function(){
-            var shopList = this.shopList.slice(0,8);
-            var list = this.list;
-            shopList.map(function(item,index){
-                if(index < 3){
-                    list[0].list.push(item);
-                }else if(index == 3){
-                    list[1] = {
-                        list:[]
-                    };
-                    list[1].list.push(item);
-                    list[1].list.push('');
-                }else if(index == 4){
-                    list[1].list.push(item);
-                }else{
-                    list[2] = list[2] || {
-                        list: []
-                    };
-                    list[2].list.push(item);
-                }
-            });
-
-            console.log(list);
+            this.animation = require('@weex-module/animation');
+            this.timer = require('@weex-module/timer');
+            this.init();
+            this.initStart();
         },
         methods: {
+            init: function(){
+                var shopList = this.shopList.slice(0,8);
+                var list = this.list;
+                shopList.map(function(item,index){
+                    if(index < 3){
+                        list[0].list.push({
+                            name: item,
+                            index: index,
+                            active: false
+                        });
+                    }else if(index == 3){
+                        list[1] = {
+                            list:[]
+                        };
+                        list[1].list.push({
+                            name: item,
+                            index: 7,
+                            active: false
+                        });
+                        list[1].list.push('');
+                    }else if(index == 4){
+                        list[1].list.push({
+                            name: item,
+                            index: 3,
+                            active: false
+                        });
+                    }else{
+                        list[2] = list[2] || {
+                            list: []
+                        };
+                        list[2].list.push({
+                            name: item,
+                            index: 11 - index,
+                            active: false
+                        });
+                    }
+                });
 
+                list[0].list[0].active = true;
+            },
+            initStart: function(){
+                var me = this;
+                me.timer.setTimeout(function(){
+                    var $start = me.$el('start');
+                    me.animation.transition($start, {
+                        styles: {
+                          transform: 'scale(1.8)'
+                        },
+                        duration: 500,
+                        timingFunction: 'ease',
+                        transformOrigin: 'center center',
+                        delay: 0
+                    },function(){});
+                },100);
+            },
+            start:function(){
+                var me = this;
+                if(!me.isStart){
+                    return false;
+                }
+                me.isStart = false;
+                var wholeTimes = 100 + parseInt(Math.random() * 8);
+                var num = 0;
+                this.loop(function(){
+                    num ++;
+                    me.list.forEach(function(out){
+                        out.list.forEach(function(inner){
+                            inner.active = false;
+                            if(inner.index === num % 8){
+                                inner.active = true;
+                            }
+                        })
+                    });
+                },function(){
+                    me.isStart = true;
+                } , wholeTimes);
+            },
+            loop: function(callback, done, wholeTimes, times, speed){
+                var me = this;
+                times = times || 0;
+                speed = speed || 100;
+                times ++;
+                if(times === wholeTimes){
+                    done && done();
+                    return false;
+                }
+                if(times > wholeTimes / 4){
+                    speed = 60;
+                }else if(times > wholeTimes * 2/3){
+                    speed = 30;
+                }
+                this.timer.setTimeout(function(){
+                    callback && callback();
+                    me.loop(callback, done ,wholeTimes ,times, speed);
+                },speed);
+            }
         }
     }
 </script>
