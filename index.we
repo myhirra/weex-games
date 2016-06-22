@@ -1,6 +1,10 @@
 <style>
+
+    .wrapper{
+        justify-content: center;
+    }
+
     .main{
-        margin-top: 200;
         padding-left: 100;
         padding-right: 100;
     }
@@ -13,14 +17,22 @@
         align-items: center;
     }
 
+    .header-text{
+        font-size: 40;
+    }
+
     .row-wrapper{
         flex-direction: row;
+        width: 184;
         height: 200;
     }
 
     .row-inner{
-        width: 180;
+        width: 184;
         height: 200;
+        border-color: #f32d2d;
+        border-width: 2;
+        border-style: solid;
     }
 
     .block-common{
@@ -28,6 +40,10 @@
         height: 200;
         justify-content: center;
         align-items: center;
+    }
+
+    .block-middle{
+        background: #ffffff;
     }
 
     .active{
@@ -45,11 +61,11 @@
     }
 
     .start-active{
-        color : #ff6699;
+        color: #f32d2d;
     }
 
     .start-no-active{
-        color : #999999;
+        color : #dddddd;
     }
 
 </style>
@@ -57,11 +73,16 @@
 <template>
     <div class="wrapper">
         <div class="header">
-            <text>今天去哪儿吃?</text>
+            <text class="header-text">今天去哪儿吃?</text>
         </div>
         <div class="main">
             <div class="row-wrapper" repeat="{{(i,out) in list}}">
-                <div class="row-inner" repeat="{{(j,inner) in out.list}}">
+                <div class="row-inner"
+                     repeat="{{(j,inner) in out.list}}"
+                     style="border-top-width: {{i === 1? '0': '2'}};
+                            border-bottom-width: {{i === 1? '0': '2'}};
+                            border-left-width: {{j === 1? '0': '2'}};
+                            border-right-width: {{j === 1? '0': '2'}}">
                     <div if="{{i===1 && j === 1}}" class="block-common block-middle" onclick="start">
                         <text class="start {{isStart? 'start-active': 'start-no-active'}}" id="start">Start</text>
                     </div>
@@ -133,17 +154,21 @@
             initStart: function(){
                 var me = this;
                 me.timer.setTimeout(function(){
-                    var $start = me.$el('start');
-                    me.animation.transition($start, {
-                        styles: {
-                          transform: 'scale(1.8)'
-                        },
-                        duration: 500,
-                        timingFunction: 'ease',
-                        transformOrigin: 'center center',
-                        delay: 0
-                    },function(){});
+                    me.scaleStart(1.8);
                 },100);
+            },
+            scaleStart: function(x){
+                var me = this;
+                var $start = me.$el('start');
+                me.animation.transition($start, {
+                    styles: {
+                      transform: 'scale('+ x +')'
+                    },
+                    duration: 500,
+                    timingFunction: 'ease',
+                    transformOrigin: 'center center',
+                    delay: 0
+                },function(){});
             },
             start:function(){
                 var me = this;
@@ -151,6 +176,13 @@
                     return false;
                 }
                 me.isStart = false;
+
+                var $start = me.$el('start');
+                me.scaleStart(0.8);
+                me.timer.setTimeout(function(){
+                    me.scaleStart(1.8);
+                },200);
+
                 var wholeTimes = 100 + parseInt(Math.random() * 8);
                 var num = 0;
                 this.loop(function(){
